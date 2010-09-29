@@ -53,6 +53,7 @@ String::Util
 Text::Table
 WWW::Mechanize
 WWW::UsePerl::Journal::Post 
+Getopt::Chain
 _END_
 }
 

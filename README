@@ -7,8 +7,8 @@ VERSION
 SYNOPSIS
         # Initialize and edit the config (only need to do this once)
         pm-announce config edit
-        
-    # Generate a template for the event
+    
+        # Generate a template for the event
         pm-announce template > event.txt
 
         # Edit event.txt with your editor of choice...

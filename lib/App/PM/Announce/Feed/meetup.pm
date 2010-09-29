@@ -53,7 +53,7 @@ sub announce {
         button => 'submitButton',
     );
 
-    die "Wasn't logged in" unless $self->content =~ m/Your Meetup Groups/;
+    die "Wasn't logged in" unless $self->content =~ m/Your \d+? Meetup Groups/;
 
     my %optional;
     my ($image, $temporary_image);

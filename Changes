@@ -1,6 +1,13 @@
 TODO:
     - Support more Meetup options
 
+0.026
+    - use.perl.org is a no-op now that it is read only
+    - add blogs.perl.org feed
+    - add Getopt::Chain dep
+    - update to Meetup interface
+    - LinkedIn captcha deprecates that feature
+
 0.025 Wednesday June 10 17:21:39 PDT 2009:
     - Use Document::TriPart instead of Document::Stembolt
 

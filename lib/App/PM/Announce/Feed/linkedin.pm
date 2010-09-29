@@ -19,12 +19,14 @@ sub announce {
 
     $self->logger->debug( "Login as $username / $password" );
 
+     $self->agent->form_with_fields('session_login','session_key',
+         'session_password', 'session_login', 'csrfToken', 'session_rikey');
+
     $self->submit_form(
         fields => {
             session_key => $username,
             session_password => $password,
         },
-        form_number => 2,
         button => 'session_login',
     );
 
@@ -39,7 +41,7 @@ sub announce {
             question => $self->format( \%event => 'title' ),
             questionDetail => $self->format( \%event => 'description' ),
         },
-        form_number => 4,
+        form_number => 2,
         button => 'createQuestion',
     );
 

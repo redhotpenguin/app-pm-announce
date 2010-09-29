@@ -13,7 +13,7 @@ Version 0.025
 
 =cut
 
-our $VERSION = '0.025';
+our $VERSION = '0.026';
 
 use Moose;
 #with 'MooseX::LogDispatch';
@@ -35,6 +35,7 @@ use App::PM::Announce::Feed::meetup;
 use App::PM::Announce::Feed::linkedin;
 use App::PM::Announce::Feed::greymatter;
 use App::PM::Announce::Feed::useperl;
+use App::PM::Announce::Feed::blogperl;
 
 sub BUILD {
     my $self = shift;
@@ -127,6 +128,7 @@ sub _build_feed {
         linkedin => $self->_build_linkedin_feed,
         greymatter => $self->_build_greymatter_feed,
         useperl => $self->_build_useperl_feed,
+        blogperl => $self->_build_blogperl_feed,
     };
 }
 
@@ -145,6 +147,9 @@ sub _build_meetup_feed {
 sub _build_linkedin_feed {
     my $self = shift;
     return undef unless my $given = $self->config->{feed}->{linkedin};
+    warn("LinkedIn added a captcha, cannot post automatically");
+    return undef;
+
     return App::PM::Announce::Feed::linkedin->new(
         app => $self,
         username => $given->{username},
@@ -166,7 +171,12 @@ sub _build_greymatter_feed {
 
 sub _build_useperl_feed {
     my $self = shift;
+
     return undef unless my $given = $self->config->{feed}->{useperl};
+
+    warn("use.perl.org readonly via Pudge until further notice, no post");
+    return undef;
+
     return App::PM::Announce::Feed::useperl->new(
         app => $self,
         username => $given->{username},
@@ -174,6 +184,19 @@ sub _build_useperl_feed {
         promote => $given->{promote},
     );
 }
+
+sub _build_blogperl_feed {
+    my $self = shift;
+    return undef unless my $given = $self->config->{feed}->{blogperl};
+    return App::PM::Announce::Feed::blogperl->new(
+        app => $self,
+        username => $given->{username},
+        password => $given->{password},
+        uri => $given->{uri},
+    );
+}
+
+
 
 has history => qw/is ro isa App::PM::Announce::History lazy_build 1/;
 sub _build_history {
@@ -223,6 +246,7 @@ sub startup {
 
 # Replace <gid> with the gid of your group
 
+# LinkedIn added captcha, no longer usable.
 #<feed linkedin>
 #    username
 #    password
@@ -237,9 +261,16 @@ sub startup {
 #    uri http://example.com/cgi-bin/greymatter/gm.cgi
 #</feed>
 
+# use.perl.org currently readonly until Pudge finds a new home
 #<feed useperl>
 #    username
 #    password
+#</feed>
+
+#<feed blogperl>
+#    username
+#    password
+#    uri http://blogs.perl.org/mt/mt.fcgi?__mode=view&_type=entry&blog_id=210
 #</feed>
 
 _END_
@@ -384,6 +415,35 @@ sub announce {
         else {
             $self->logger->debug( "No feed configured for useperl" );
         }
+
+        if ($event->{did_blogperl}) {
+            $self->logger->debug( "Already posted to blogperl, skipping" );
+            push @report, "Already announced on blogperl";
+        }
+        elsif ($self->feed->{blogperl}) {
+            unless ($self->dry_run) {
+                die "Didn't announce on blogperl" unless $result = $self->feed->{blogperl}->announce(
+                    %event,
+                    description => [
+                        $event{description},
+                        "\nRSVP at Meetup - <a href=\"$event->{meetup_link}\">$event->{meetup_link}</a>"
+                    ],
+                );
+                $self->logger->info( "\"$event{title}\" ($uuid) announced to blogperl" );
+                $result = $self->history->update( $uuid => did_blogperl => 1 );
+                push @report, "Announced on blogperl";
+            }
+            else {
+                push @report, "Would announce on blogperl";
+            }
+        }
+        else {
+            $self->logger->debug( "No feed configured for blogperl" );
+        }
+
+
+
+
     };
     if ($@) {
         warn "Unable to announce \"$event{title}\" ($uuid)\n";

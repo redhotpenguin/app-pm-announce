@@ -6,7 +6,6 @@ use strict;
 use Moose;
 extends 'App::PM::Announce::Feed';
 
-has +uri => qw/required 0/;
 has promote => qw/is ro default publish/;
 
 use WWW::UsePerl::Journal::Post;
